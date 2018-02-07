@@ -1,6 +1,6 @@
 import Realm from 'realm';
 
-class RealmPersistInterface {
+export default class ReduxPersistRealmStorageEngine {
     constructor() {
         this.realm = new Realm({
             schema: [{
@@ -85,7 +85,3 @@ class RealmPersistInterface {
         }
     };
 }
-
-const singleton = new RealmPersistInterface();
-
-export default singleton;
