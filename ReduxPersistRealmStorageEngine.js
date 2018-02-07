@@ -1,22 +1,35 @@
 import Realm from 'realm';
 
 export default class ReduxPersistRealmStorageEngine {
-    constructor() {
-        this.realm = new Realm({
-            schema: [{
-                name: 'Item',
-                primaryKey: 'name',
-                properties: {
-                    name: 'string',
-                    content: 'string',
-                },
-            }],
-        });
+    constructor(config, modelName) {
+        this.config = config;
+        this.modelName = modelName;
+        this.model = Array.prototype.find.call(
+            this.config.schema,
+            (model) => {
+                return model.schema.name === this.modelName;
+            },
+        );
 
-        this.items = this.realm.objects('Item');
+        this.validateSchema();
+
+        this.realm = new Realm(config);
+        this.items = this.realm.objects(this.modelName);
     }
 
-    getItem = (key, callback) => {
+    validateSchema() {
+        if (this.model === undefined) {
+            throw new Error(`A model '${this.modelName}' is missing in provided config`);
+        }
+
+        const { properties: { name, content } } = this.model.schema;
+
+        if (name !== 'string' || content !== 'string') {
+            throw new Error(`A model should contain this fields: 'name' and 'content' with type 'string'`);
+        }
+    }
+
+    getItem(key, callback) {
         try {
             const matches = this.items.filtered(`name = "${key}"`);
 
@@ -30,13 +43,13 @@ export default class ReduxPersistRealmStorageEngine {
         }
     };
 
-    setItem = (key, value, callback) => {
+    setItem(key, value, callback) {
         try {
             this.getItem(key, (error) => {
                 this.realm.write(() => {
                     if (error) {
                         this.realm.create(
-                            'Item',
+                            this.modelName,
                             {
                                 name: key,
                                 content: value,
@@ -44,7 +57,7 @@ export default class ReduxPersistRealmStorageEngine {
                         );
                     } else {
                         this.realm.create(
-                            'Item',
+                            this.modelName,
                             {
                                 name: key,
                                 content: value,
@@ -61,7 +74,7 @@ export default class ReduxPersistRealmStorageEngine {
         }
     };
 
-    removeItem = (key, callback) => {
+    removeItem(key, callback) {
         try {
             this.realm.write(() => {
                 const item = this.items.filtered(`name = "${key}"`);
@@ -73,7 +86,7 @@ export default class ReduxPersistRealmStorageEngine {
         }
     };
 
-    getAllKeys = (callback) => {
+    getAllKeys(callback) {
         try {
             const keys = this.items.map(
                 (item) => item.name
