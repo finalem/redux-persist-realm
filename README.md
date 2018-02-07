@@ -31,7 +31,7 @@ react-native link realm
 ```diff
 import {compose, applyMiddleware, createStore} from 'redux'
 import {persistStore, autoRehydrate} from 'redux-persist'
-+ import realmPersistInterface from 'redux-persist-realm'
++ import reduxPersistRealm from 'redux-persist-realm'
 
 // add `autoRehydrate` as an enhancer to your store (note: `autoRehydrate` is not a middleware)
 const store = createStore(
@@ -43,8 +43,21 @@ const store = createStore(
   )
 )
 
+const reduxPersistModel = {
+  schema: {
+    name: 'ReduxPersist'
+  }
+}
+
+const realmConfig = {
+  schema: [
+    // ...
+    reduxPersistModel
+  ]
+}
+
 + const config = {
-+   storage: realmPersistInterface
++   storage: reduxPersistRealm(realmConfig, reduxPersistModel.schema.name)
 + }
 
 // begin periodically persisting the store
@@ -53,4 +66,3 @@ const store = createStore(
 ```
 
 Don't hesitate to publish [Issues](https://github.com/Osedea/redux-persist-realm/issues) if you see something missing!
-
