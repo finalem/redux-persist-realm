@@ -16,21 +16,21 @@ class RealmPersistInterface {
         this.items = this.realm.objects('Item');
     }
 
-    getItem = (key, callback) => {
+    getItem = key => new Promise((resolve, reject) => {
         try {
             const matches = this.items.filtered(`name = "${key}"`);
 
             if (matches.length > 0 && matches[0]) {
-                callback(null, matches[0].content);
+                resolve(matches[0].content);
             } else {
                 throw new Error(`Could not get item with key: '${key}'`);
             }
         } catch (error) {
-            callback(error);
+            reject(error);
         }
-    };
+    });
 
-    setItem = (key, value, callback) => {
+    setItem = (key, value) => new Promise((resolve, reject) => {
         try {
             this.getItem(key, (error) => {
                 this.realm.write(() => {
@@ -53,37 +53,39 @@ class RealmPersistInterface {
                         );
                     }
 
-                    callback();
+                    resolve();
                 });
             });
         } catch (error) {
-            callback(error);
+            reject(error);
         }
-    };
+    });
 
-    removeItem = (key, callback) => {
+    removeItem = key => new Promise((resolve, reject) => {
         try {
             this.realm.write(() => {
                 const item = this.items.filtered(`name = "${key}"`);
 
                 this.realm.delete(item);
+
+                resolve();
             });
         } catch (error) {
-            callback(error);
+            reject(error);
         }
-    };
+    });
 
-    getAllKeys = (callback) => {
+    getAllKeys = () => new Promise((resolve, reject) => {
         try {
             const keys = this.items.map(
                 (item) => item.name
             );
 
-            callback(null, keys);
+            resolve(keys);
         } catch (error) {
-            callback(error);
+            reject(error);
         }
-    };
+    });
 }
 
 const singleton = new RealmPersistInterface();
