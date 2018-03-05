@@ -30,71 +30,81 @@ export default class ReduxPersistRealmStorageEngine {
     }
 
     getItem(key, callback) {
+      return new Promise((resolve, reject) => {
         try {
-            const matches = this.items.filtered(`name = "${key}"`);
+          const matches = this.items.filtered(`name = "${key}"`);
 
-            if (matches.length > 0 && matches[0]) {
-                callback(null, matches[0].content);
-            } else {
-                throw new Error(`Could not get item with key: '${key}'`);
-            }
+          if (matches.length > 0 && matches[0]) {
+            resolve(matches[0].content);
+          } else {
+            throw new Error(`Could not get item with key: '${key}'`);
+          }
         } catch (error) {
-            callback(error);
+          reject(error);
         }
+      });
+
     };
 
     setItem(key, value, callback) {
+      return new Promise((resolve, reject) => {
         try {
-            this.getItem(key, (error) => {
-                this.realm.write(() => {
-                    if (error) {
-                        this.realm.create(
-                            this.modelName,
-                            {
-                                name: key,
-                                content: value,
-                            }
-                        );
-                    } else {
-                        this.realm.create(
-                            this.modelName,
-                            {
-                                name: key,
-                                content: value,
-                            },
-                            true
-                        );
-                    }
+          this.getItem(key, (error) => {
+          this.realm.write(() => {
+          if (error) {
+            this.realm.create(
+                this.modelName,
+                {
+                  name: key,
+                  content: value,
+                }
+            );
+          } else {
+            this.realm.create(
+              this.modelName,
+              {
+                name: key,
+                content: value,
+              },
+              true
+          );
+    }
 
-                    callback();
-                });
-            });
-        } catch (error) {
-            callback(error);
-        }
+      resolve();
+    });
+    });
+    } catch (error) {
+        reject(error);
+      }
+      });
     };
 
     removeItem(key, callback) {
+      return new Promise((resolve, reject) => {
         try {
-            this.realm.write(() => {
-                const item = this.items.filtered(`name = "${key}"`);
+          this.realm.write(() => {
+          const item = this.items.filtered(`name = "${key}"`);
 
-                this.realm.delete(item);
-            });
-        } catch (error) {
-            callback(error);
-        }
+      this.realm.delete(item);
+      resolve();
+    });
+    } catch (error) {
+        reject(error);
+      }
+      });
     };
 
     getAllKeys(callback) {
+      return new Promise((resolve, reject) => {
         try {
-            const keys = this.items.map(
-                (item) => item.name
-            );
+          const keys = this.items.map(
+              (item) => item.name
+    );
 
-            callback(null, keys);
-        } catch (error) {
-            callback(error);
-        }
+      resolve(keys);
+    } catch (error) {
+        reject(error);
+      }
+      });
     };
 }
